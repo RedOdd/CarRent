@@ -10,10 +10,11 @@ namespace CarRent
 {
     public class CarsBase
     {
-        static private List<CarInBase> BaseOfCars = new List<CarInBase>();
+        private List<CarInBase> BaseOfCars = new List<CarInBase>();
         static private int BaseOfCarsID = 0;
-        static private string BaseOfCarsJSON;
-        static private string BaseOfFreeCarsJSON;
+        private string BaseOfCarsJSON;
+        private string BaseOfFreeCarsJSON;
+        private bool IsSuccessful = false;
 
         public void AddNewCar(Car car)
         {
@@ -22,8 +23,7 @@ namespace CarRent
         }
 
         public string ShowAllCars()
-        {
-            
+        {    
             BaseOfCarsJSON = JsonConvert.SerializeObject(BaseOfCars);
             return BaseOfCarsJSON;
         }
@@ -55,7 +55,6 @@ namespace CarRent
         {
             foreach (var carInBase in BaseOfCars)
             {
-                CheckAndDeleteOldCheckUp(carInBase);
                 if (CarBecameFree(carInBase, plannedTimeStartOfUse, plannedTimeEndOfUse))
                 {
                     carInBase.UpdateOccupationStatus(OccupationStatus.Free);
@@ -81,108 +80,46 @@ namespace CarRent
 
         private static bool CheckFreeRentalTime(CarInBase carInBase, DateTime plannedTimeStartOfUse, DateTime plannedTimeEndOfUse)
         {
-           
-                if (DateTime.Today < plannedTimeStartOfUse)
+            var countCheckUp = (carInBase.AvailabilityСalendar.Count-1) / 11;
+            if ((plannedTimeStartOfUse > carInBase.LastCheckUpEnded) && (DateTime.Today < plannedTimeStartOfUse))
+            {
+                if (carInBase.AvailabilityСalendar.Count % 11 == 0)
                 {
-                    if (carInBase.AvailabilityСalendar.Count >= 11)
-                    {
-                        var countCheckUp = carInBase.AvailabilityСalendar.Count % 11;
-                        if (carInBase.AvailabilityСalendar.Count % 11 == 0)
-                        {
-                            if (plannedTimeStartOfUse > carInBase.AvailabilityСalendar[carInBase.AvailabilityСalendar.Count - 1].EndOfUse)
-                            {
-                                return true;
-                            }
-                            else
-                            {
-                            return false;
-                            }
-                        }
-                        else
-                        {
-                            if (plannedTimeStartOfUse > carInBase.AvailabilityСalendar[carInBase.AvailabilityСalendar.Count - 1].EndOfUse)
-                            {
-                                return true;
-                            }
-                            else
-                            {
-                                bool isFindPlace = false;
-                                for (var count = countCheckUp * 11; count < carInBase.AvailabilityСalendar.Count; count++)
-                                {
-                                    if ((carInBase.AvailabilityСalendar[count].EndOfUse < plannedTimeStartOfUse) && (plannedTimeEndOfUse < carInBase.AvailabilityСalendar[count + 1].StartOfUse))
-                                    {
-                                        isFindPlace = true;
-                                        break;
-                                    }
-                                }
-                                return isFindPlace;
-                            }
-                        }
-                    }
-                    else
-                    {
-                        if ((carInBase.AvailabilityСalendar.Count == 0) || (plannedTimeEndOfUse < carInBase.AvailabilityСalendar[0].StartOfUse))
-                        {
-                            if (carInBase.AvailabilityСalendar.Count == 0)
-                            {
-                                return true;
-                            }
-                            else
-                            {
-                                return true;
-                            }
-                        }
-                        else
-                        {
-                            if (plannedTimeStartOfUse > carInBase.AvailabilityСalendar[carInBase.AvailabilityСalendar.Count - 1].EndOfUse)
-                            {
-                                return true;
-                            }
-                            else
-                            {
-                                bool isFindPlace = false;
-                                for (int count = 0; count < carInBase.AvailabilityСalendar.Count - 1; count++)
-                                {
-                                    if ((carInBase.AvailabilityСalendar[count].EndOfUse < plannedTimeStartOfUse) && (plannedTimeEndOfUse < carInBase.AvailabilityСalendar[count + 1].StartOfUse))
-                                    {
-                                        isFindPlace = true;
-                                        break;
-                                    }
-                                }
-                                return isFindPlace;
-                            }
-                        }
-                    }
+                    return true;
                 }
                 else
                 {
-                    return false;
-                }
-        }
-
-        
-    
-
-        public void CheckAndDeleteOldCheckUp(CarInBase carInBase)
-        {
-            var countCheckUp = carInBase.AvailabilityСalendar.Count % 11;
-            if (carInBase.AvailabilityСalendar.Count >= 11)
-            {
-                for (var count = 10; count <= countCheckUp * 11; count += 11)
-                {
-                    if (carInBase.AvailabilityСalendar[count].EndOfUse < DateTime.Today)
+                    if (carInBase.AvailabilityСalendar.Count % 11 == 9)
                     {
-                        for (var innerCount = 10; innerCount >= 0; innerCount--)
+                        return true;
+                    }
+                    else
+                    {
+                        var isRightPlace = true;
+                        for (int count = countCheckUp * 11; count < carInBase.AvailabilityСalendar.Count; count++)
                         {
-                            carInBase.AvailabilityСalendar.Remove(carInBase.AvailabilityСalendar[count - innerCount]);
+                            if (((carInBase.AvailabilityСalendar[count].StartOfUse <= plannedTimeStartOfUse) || (plannedTimeStartOfUse <= carInBase.AvailabilityСalendar[count].EndOfUse)) ||
+                                ((carInBase.AvailabilityСalendar[count].StartOfUse <= plannedTimeEndOfUse) || (plannedTimeEndOfUse <= carInBase.AvailabilityСalendar[count].EndOfUse)) ||
+                                ((plannedTimeStartOfUse <= carInBase.AvailabilityСalendar[count].StartOfUse) || (carInBase.AvailabilityСalendar[count].StartOfUse <= plannedTimeEndOfUse)) ||
+                                ((plannedTimeStartOfUse <= carInBase.AvailabilityСalendar[count].EndOfUse)||(carInBase.AvailabilityСalendar[count].EndOfUse <= plannedTimeEndOfUse)))
+                            {
+                                isRightPlace = false;
+                                break;
+                            }
                         }
+                        return isRightPlace;
                     }
                 }
             }
-        }      
+            else
+            {
+                return false;
+            }
+        }
 
         public void RentСar(CarInBase carInBase, DateTime plannedTimeStartOfUse, DateTime plannedTimeEndOfUse)
         {
+            IsSuccessful = false;
             plannedTimeStartOfUse = plannedTimeStartOfUse.Date;
             plannedTimeEndOfUse = plannedTimeEndOfUse.Date;
             CheckFreeCarsForCertanTime(plannedTimeStartOfUse, plannedTimeEndOfUse);
@@ -190,94 +127,46 @@ namespace CarRent
             carInBase.UpdateOccupationStatus(OccupationStatus.Busy);
         }
 
+        public bool GetSuccessful()
+        {
+            return IsSuccessful;
+        }
+
         private void CheckFreeRentalTimeAndAddOrderIfFree(CarInBase carInBase, DateTime plannedTimeStartOfUse, DateTime plannedTimeEndOfUse)
         {
-            if (DateTime.Today < plannedTimeStartOfUse)
+            var countCheckUp = (carInBase.AvailabilityСalendar.Count - 1) / 11;
+            if ((plannedTimeStartOfUse > carInBase.LastCheckUpEnded) && (DateTime.Today < plannedTimeStartOfUse))
             {
-                if (carInBase.AvailabilityСalendar.Count >= 11)
+                if (carInBase.AvailabilityСalendar.Count % 11 == 0)
                 {
-                    var countCheckUp = carInBase.AvailabilityСalendar.Count % 11;
-                    if (carInBase.AvailabilityСalendar.Count % 11 == 0)
-                    {
-                        if (plannedTimeStartOfUse > carInBase.AvailabilityСalendar[carInBase.AvailabilityСalendar.Count - 1].EndOfUse)
-                        {
-                            carInBase.AvailabilityСalendar.Add(new AvailabilityСalendar(plannedTimeStartOfUse, plannedTimeEndOfUse));
-                        }
-                    }
-                    else
-                    {
-                        if (plannedTimeStartOfUse > carInBase.AvailabilityСalendar[carInBase.AvailabilityСalendar.Count - 1].EndOfUse)
-                        {
-                            carInBase.AvailabilityСalendar.Add(new AvailabilityСalendar(plannedTimeStartOfUse, plannedTimeEndOfUse));
-                        }
-                        else
-                        {
-                            for (var count = countCheckUp * 11; count < carInBase.AvailabilityСalendar.Count; count++)
-                            {
-                                if ((carInBase.AvailabilityСalendar[count-1].EndOfUse < plannedTimeStartOfUse) && (plannedTimeEndOfUse < carInBase.AvailabilityСalendar[count].StartOfUse))
-                                {
-                                    carInBase.AvailabilityСalendar.Add(carInBase.AvailabilityСalendar[carInBase.AvailabilityСalendar.Count - 1]);
-                                    for (int innerCount = count; innerCount < carInBase.AvailabilityСalendar.Count-1; innerCount++)
-                                    {
-                                        carInBase.AvailabilityСalendar[innerCount+1] = carInBase.AvailabilityСalendar[innerCount];
-                                    }
-                                    carInBase.AvailabilityСalendar[count] = new AvailabilityСalendar(plannedTimeStartOfUse, plannedTimeEndOfUse);
-                                }
-                            }
-                        }
-                    }
+                    carInBase.AvailabilityСalendar.Add(new AvailabilityСalendar(plannedTimeStartOfUse, plannedTimeEndOfUse));
+                    IsSuccessful = true;
                 }
                 else
-                {   /* if ((carInBase.AvailabilityСalendar.Count == 0) || (plannedTimeEndOfUse < carInBase.AvailabilityСalendar[0].StartOfUse))
-                        {
-                            if (carInBase.AvailabilityСalendar.Count == 0)
-                            {
-                                return true;
-                            }
-                            else
-                            {
-                                return true;
-                            }
-                        } */
-                    if ((carInBase.AvailabilityСalendar.Count == 0 || (plannedTimeEndOfUse < carInBase.AvailabilityСalendar[0].StartOfUse)))
+                {
+                    if (carInBase.AvailabilityСalendar.Count % 11 == 9)
                     {
-                        if (carInBase.AvailabilityСalendar.Count == 0)
-                        {
-                            carInBase.AvailabilityСalendar.Add(new AvailabilityСalendar(plannedTimeStartOfUse, plannedTimeEndOfUse));
-                        }
-                        else
-                        {
-                            if (plannedTimeEndOfUse < carInBase.AvailabilityСalendar[0].StartOfUse)
-                            {
-                                carInBase.AvailabilityСalendar.Add(carInBase.AvailabilityСalendar[carInBase.AvailabilityСalendar.Count - 1]);
-                                for (var count = 0; count < carInBase.AvailabilityСalendar.Count; count++)
-                                {
-                                    carInBase.AvailabilityСalendar[count + 1] = carInBase.AvailabilityСalendar[count];
-                                }
-                                carInBase.AvailabilityСalendar[0] = new AvailabilityСalendar(plannedTimeStartOfUse, plannedTimeEndOfUse);
-                            }
-                        }
+                        carInBase.AvailabilityСalendar.Add(new AvailabilityСalendar(plannedTimeStartOfUse, plannedTimeEndOfUse));
+                        IsSuccessful = true;
                     }
                     else
                     {
-                        if (plannedTimeStartOfUse > carInBase.AvailabilityСalendar[carInBase.AvailabilityСalendar.Count - 1].EndOfUse)
+                        var isRightPlace = true;
+                        for (int count = countCheckUp * 11; count < carInBase.AvailabilityСalendar.Count; count++)
+                        {
+                            if (((carInBase.AvailabilityСalendar[count].StartOfUse <= plannedTimeStartOfUse) && (plannedTimeStartOfUse <= carInBase.AvailabilityСalendar[count].EndOfUse)) ||
+                                ((carInBase.AvailabilityСalendar[count].StartOfUse <= plannedTimeEndOfUse) && (plannedTimeEndOfUse <= carInBase.AvailabilityСalendar[count].EndOfUse)) ||
+                                ((plannedTimeStartOfUse <= carInBase.AvailabilityСalendar[count].StartOfUse) && (carInBase.AvailabilityСalendar[count].StartOfUse <= plannedTimeEndOfUse)) ||
+                                ((plannedTimeStartOfUse <= carInBase.AvailabilityСalendar[count].EndOfUse) && (carInBase.AvailabilityСalendar[count].EndOfUse <= plannedTimeEndOfUse)))
+                            {
+                                isRightPlace = false;
+                                break;
+                            }
+                        }
+                       if (isRightPlace)
                         {
                             carInBase.AvailabilityСalendar.Add(new AvailabilityСalendar(plannedTimeStartOfUse, plannedTimeEndOfUse));
-                        }
-                        else
-                        {
-                            for (int count = 0; count < carInBase.AvailabilityСalendar.Count - 1; count++)
-                            {
-                                if ((carInBase.AvailabilityСalendar[count].EndOfUse < plannedTimeStartOfUse) && (plannedTimeEndOfUse < carInBase.AvailabilityСalendar[count + 1].StartOfUse))
-                                {
-                                    carInBase.AvailabilityСalendar.Add(carInBase.AvailabilityСalendar[carInBase.AvailabilityСalendar.Count - 1]);
-                                    for (int innerCount = carInBase.AvailabilityСalendar.Count - 2; innerCount > count + 1; innerCount--)
-                                    {
-                                        carInBase.AvailabilityСalendar[innerCount] = carInBase.AvailabilityСalendar[innerCount - 1];
-                                    }
-                                    carInBase.AvailabilityСalendar[count + 1] = new AvailabilityСalendar(plannedTimeStartOfUse, plannedTimeEndOfUse);
-                                }
-                            }
+                            IsSuccessful = true;
                         }
                     }
                 }

@@ -7,9 +7,9 @@ using Newtonsoft.Json;
 
 namespace CarRent
 {
-    class AdminFacade
+    public class AdminFacade
     {
-        CarsBase baseOfCars = new CarsBase();
+        private CarsBase baseOfCars = new CarsBase();
 
         public void ShowAllCars()
         {

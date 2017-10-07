@@ -37,14 +37,7 @@ namespace CarRent
 
         public bool IsFreeToRent()
         {
-            if (_occupationStatus == OccupationStatus.Free)
-            {
-                return true;
-            }
-            else
-            {
-                return false;
-            }
+            return (_occupationStatus == OccupationStatus.Free);        
         }
 
 

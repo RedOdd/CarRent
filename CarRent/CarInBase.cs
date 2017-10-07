@@ -10,6 +10,7 @@ namespace CarRent
         public int Id;
         public Car Car;
         public List<AvailabilityСalendar> AvailabilityСalendar = new List<AvailabilityСalendar>();
+        public DateTime LastCheckUpEnded;
 
         public CarInBase(int id,Car car)
         {
@@ -31,7 +32,8 @@ namespace CarRent
                 Car.SetBusy();
                 if (Car.IsCheckNeeded())
                 {
-                    AvailabilityСalendar.Add(new AvailabilityСalendar(AvailabilityСalendar[AvailabilityСalendar.Count - 1].EndOfUse.AddDays(1), AvailabilityСalendar[AvailabilityСalendar.Count - 1].EndOfUse.AddDays(1).AddDays(7)));
+                    AvailabilityСalendar.Add(new AvailabilityСalendar(AvailabilityСalendar[AvailabilityСalendar.Count - 1].EndOfUse.AddDays(1), AvailabilityСalendar[AvailabilityСalendar.Count - 1].EndOfUse.AddDays(1).AddDays(6)));
+                    LastCheckUpEnded = AvailabilityСalendar[AvailabilityСalendar.Count - 1].EndOfUse;
                 }
             }
         }

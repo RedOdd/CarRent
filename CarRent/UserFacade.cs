@@ -13,7 +13,6 @@ namespace CarRent
         public string ShowFreeCars(DateTime plannedTimeStartOfUse, DateTime plannedTimeEndOfUse)
         {
            return baseOfCars.ShowFreeCars(plannedTimeStartOfUse, plannedTimeEndOfUse);
-           //
         }
 
         public void RentCar(CarInBase carInBase, DateTime plannedTimeStartOfUse, DateTime plannedTimeEndOfUse)

@@ -11,9 +11,9 @@ namespace CarRent
     {
         private CarsBase baseOfCars = new CarsBase();
 
-        public void ShowAllCars()
+        public string ShowAllCars()
         {
-            baseOfCars.ShowAllCars();
+           return baseOfCars.ShowAllCars();
         }
 
         public void AddNewCar(Car car)

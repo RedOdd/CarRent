@@ -54,6 +54,7 @@
     <Compile Include="CarTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="CarBaseTests.cs" />
+    <Compile Include="FacadeTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
